@@ -1,0 +1,13 @@
+{
+    "name": "it1shka/tetris-php",
+    "description": "Tetris implemented in the PHP programming language",
+    "type": "game",
+    "license": "NON-AI MIT",
+    "authors": [
+        {
+            "name": "it1shka",
+            "email": "2tishbel@gmail.com"
+        }
+    ],
+    "require": {}
+}
