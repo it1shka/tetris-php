@@ -6,6 +6,8 @@ final class Shape {
   public function __construct (
     public readonly string $name,
     public readonly array $body,
+    public readonly int $rows,
+    public readonly int $cols,
   ) {}
 
   public static function fromString(string $name, string $source): Shape {
@@ -18,7 +20,18 @@ final class Shape {
         array_push($body, [$i, $j]);
       }
     }
-    return new Shape($name, $body);
+    $rowsCount = count($rows);
+    $colsCount = count($rows[0]);
+    return new Shape($name, $body, $rowsCount, $colsCount);
+  }
+
+  // TODO: check formula
+  public function rotate(): Shape {
+    $rotatedBody = array_map(function (array $pos) {
+      [$row, $col] = $pos;
+      return [$col, $this->cols - $row - 1];
+    }, $this->body);
+    return new Shape($this->name, $rotatedBody, $this->cols, $this->rows);
   }
 }
 
@@ -47,13 +60,17 @@ final class ShapeStorage {
   }
 }
 
-// TODO: 
 final class ShapeSet {
   private readonly array $frames;
   private int $pointer;
 
+  // TODO: check whether it works
   private static function createFrames(Shape $initial): array {
-    // TODO: 
+    $frames = [$initial];
+    for ($i = 0; $i < 3; $i++) {
+      array_push($frames, end($frames)->rotate());
+    }
+    return $frames;
   }
 
   public function __construct (Shape $initial) {
