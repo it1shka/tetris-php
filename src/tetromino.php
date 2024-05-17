@@ -21,11 +21,10 @@ final class Shape {
       }
     }
     $rowsCount = count($rows);
-    $colsCount = count($rows[0]);
+    $colsCount = strlen($rows[0]);
     return new Shape($name, $body, $rowsCount, $colsCount);
   }
 
-  // TODO: check formula
   public function rotate(): Shape {
     $rotatedBody = array_map(function (array $pos) {
       [$row, $col] = $pos;
@@ -36,15 +35,19 @@ final class Shape {
 }
 
 final class ShapeStorage {
-  private static array $shapes = [
-    Shape::fromString("Straight", "XXXX"),
-    Shape::fromString("Square", "XX\nXX"),
-    Shape::fromString("T", "XXX\nOXO"),
-    Shape::fromString("L", "XO\nXO\nXX"),
-    Shape::fromString("J", "OX\nOX\nXX"),
-    Shape::fromString("S", "OXX\nXXO"),
-    Shape::fromString("Z", "XXO\nOXX"),
-  ];
+  private static array $shapes;
+
+  public static function init(): void {
+    ShapeStorage::$shapes  = [
+      Shape::fromString("Straight", "XXXX"),
+      Shape::fromString("Square", "XX\nXX"),
+      Shape::fromString("T", "XXX\nOXO"),
+      Shape::fromString("L", "XO\nXO\nXX"),
+      Shape::fromString("J", "OX\nOX\nXX"),
+      Shape::fromString("S", "OXX\nXXO"),
+      Shape::fromString("Z", "XXO\nOXX"),
+    ];
+  }
 
   public static function shapes(): array {
     return [...ShapeStorage::$shapes];
@@ -58,13 +61,19 @@ final class ShapeStorage {
     }
     return null;
   }
+
+  public static function random(): Shape {
+    $choice = array_rand(ShapeStorage::$shapes);
+    return ShapeStorage::$shapes[$choice];
+  }
 }
+
+ShapeStorage::init();
 
 final class ShapeSet {
   private readonly array $frames;
   private int $pointer;
 
-  // TODO: check whether it works
   private static function createFrames(Shape $initial): array {
     $frames = [$initial];
     for ($i = 0; $i < 3; $i++) {
@@ -97,10 +106,52 @@ final class ShapeSet {
   }
 }
 
-// TODO: complete class
+final class Tile {
+  public function __construct (
+    public readonly int $row,
+    public readonly int $col,
+    public readonly string $color,
+  ) {}
+}
+
 final class Tetromino {
   public function __construct (
-    // TODO: define fields
-    // TODO: such as ShapeSet, position, etc.
+    public readonly string $color,
+    private readonly ShapeSet $shapeSet,
+    private int $row,
+    private int $col,
   ) {}
+
+  public function name(): string {
+    return $this->shapeSet->current()->name;
+  }
+
+  public function rotateLeft(): void {
+    $this->shapeSet->previous();
+  }
+
+  public function rotateRight(): void {
+    $this->shapeSet->next();
+  }
+
+  public function moveLeft(): void {
+    $this->col--;
+  }
+
+  public function moveRight(): void {
+    $this->col++;
+  }
+
+  public function moveDown(): void {
+    $this->row++;
+  }
+
+  public function getTiles(): array {
+    return array_map(function ($pos) {
+      [$row, $col] = $pos;
+      $row += $this->row;
+      $col += $this->col;
+      return new Tile($row, $col, $this->color);
+    }, $this->shapeSet->current()->body);
+  }
 }
