@@ -1,7 +1,7 @@
-<?php
+<?php declare(strict_types = 1);
 
 final class Storage {
-  private static array $shapes = [
+  public static array $shapes = [
     "I" => "XXXX|X.X.X.X",
     "O" => "XX.XX",
     "T" => "XXX.OXO|OX.XX.OX|OXO.XXX|XO.XX.XO",
@@ -11,7 +11,7 @@ final class Storage {
     "S" => "OXX.XXO|XO.XX.OX",
   ];
 
-  private static array $colors = [
+  public static array $colors = [
     "#172547", "#9F8170",
     "#4B5320", "#458B74",
     "#C62D42", "#E5C6CE",
@@ -29,6 +29,15 @@ final class Storage {
       }
       return $frames;
     }, explode("|", $shape));
+  }
+
+  public static function getRandomTetrominoName(): string {
+    return array_rand(Storage::$shapes);
+  }
+
+  public static function getFramesByName(string $name) {
+    $shape = Storage::$shapes[$name];
+    return Storage::intoFrames($shape);
   }
 
   public static function getRandomShape(): array {

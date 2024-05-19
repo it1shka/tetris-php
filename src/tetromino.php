@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 enum Direction {
   case Up;
@@ -42,7 +42,7 @@ final class Tetromino {
   public function __construct (
     public readonly string $name,
     private readonly array $frames,
-    private array $position,
+    public array $position,
     public readonly string $color,
   ) {}
 
