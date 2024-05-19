@@ -1,157 +1,76 @@
 <?php
-declare(strict_types=1);
-namespace Tetromino;
 
-final class Shape {
-  public function __construct (
-    public readonly string $name,
-    public readonly array $body,
-    public readonly int $rows,
-    public readonly int $cols,
-  ) {}
+enum Direction {
+  case Up;
+  case Right;
+  case Down;
+  case Left;
 
-  public static function fromString(string $name, string $source): Shape {
-    $rows = array_map('trim', explode("\n", $source));
-    $rows = array_filter($rows, fn (string $row) => !empty($row));
-    $body = [];
-    foreach ($rows as $i => $row) {
-      foreach (str_split($row) as $j => $col) {
-        if ($col !== "X") continue;
-        array_push($body, [$i, $j]);
-      }
-    }
-    $rowsCount = count($rows);
-    $colsCount = strlen($rows[0]);
-    return new Shape($name, $body, $rowsCount, $colsCount);
-  }
-
-  public function rotate(): Shape {
-    $rotatedBody = array_map(function (array $pos) {
-      [$row, $col] = $pos;
-      return [$col, $this->cols - $row - 1];
-    }, $this->body);
-    return new Shape($this->name, $rotatedBody, $this->cols, $this->rows);
+  public function opposite(): Direction {
+    return match ($this) {
+      Direction::Up => Direction::Down,
+      Direction::Down => Direction::Up,
+      Direction::Right => Direction::Left,
+      Direction::Left => Direction::Right,
+    };
   }
 }
 
-final class ShapeStorage {
-  private static array $shapes;
+enum Rotation {
+  case Left;
+  case Right;
 
-  public static function init(): void {
-    ShapeStorage::$shapes  = [
-      Shape::fromString("Straight", "XXXX"),
-      Shape::fromString("Square", "XX\nXX"),
-      Shape::fromString("T", "XXX\nOXO"),
-      Shape::fromString("L", "XO\nXO\nXX"),
-      Shape::fromString("J", "OX\nOX\nXX"),
-      Shape::fromString("S", "OXX\nXXO"),
-      Shape::fromString("Z", "XXO\nOXX"),
-    ];
-  }
-
-  public static function shapes(): array {
-    return [...ShapeStorage::$shapes];
-  }
-
-  public static function byName(string $shapeName): ?Shape {
-    foreach (ShapeStorage::$shapes as $shape) {
-      if ($shape->name === $shapeName)  {
-        return $shape;
-      }
-    }
-    return null;
-  }
-
-  public static function random(): Shape {
-    $choice = array_rand(ShapeStorage::$shapes);
-    return ShapeStorage::$shapes[$choice];
-  }
-}
-
-ShapeStorage::init();
-
-final class ShapeSet {
-  private readonly array $frames;
-  private int $pointer;
-
-  private static function createFrames(Shape $initial): array {
-    $frames = [$initial];
-    for ($i = 0; $i < 3; $i++) {
-      array_push($frames, end($frames)->rotate());
-    }
-    return $frames;
-  }
-
-  public function __construct (Shape $initial) {
-    $this->frames = ShapeSet::createFrames($initial);
-    $this->pointer = 0;
-  }
-
-  public function current(): Shape {
-    return $this->frames[$this->pointer];
-  }
-
-  public function previous(): void {
-    $this->pointer--;
-    if ($this->pointer < 0) {
-      $this->pointer = count($this->frames) - 1;
-    }
-  }
-
-  public function next(): void {
-    $this->pointer++;
-    if ($this->pointer >= count($this->frames)) {
-      $this->pointer = 0;
-    }
+  public function opposite(): Rotation {
+    return match ($this) {
+      Rotation::Left => Rotation::Right,
+      Rotation::Right => Rotation::Left,
+    };
   }
 }
 
 final class Tile {
   public function __construct (
     public readonly int $row,
-    public readonly int $col,
+    public readonly int $column,
     public readonly string $color,
   ) {}
 }
 
 final class Tetromino {
+  private int $framePointer = 0;
+
   public function __construct (
+    public readonly string $name,
+    private readonly array $frames,
+    private array $position,
     public readonly string $color,
-    private readonly ShapeSet $shapeSet,
-    private int $row,
-    private int $col,
   ) {}
 
-  public function name(): string {
-    return $this->shapeSet->current()->name;
+  public function move(Direction $direction): void {
+    [$row, $col] = $this->position;
+    $this->position = match ($direction) {
+      Direction::Up => [$row - 1, $col],
+      Direction::Right => [$row, $col + 1],
+      Direction::Down => [$row + 1, $col],
+      Direction::Left => [$row, $col - 1]
+    };
   }
 
-  public function rotateLeft(): void {
-    $this->shapeSet->previous();
+  public function rotate(Rotation $rotation): void {
+    $this->framePointer = match ($rotation) {
+      Rotation::Left => $this->framePointer <= 0 
+        ? count($this->frames) - 1
+        : $this->framePointer - 1,
+      Rotation::Right => $this->framePointer >= count($this->frames) - 1
+        ? 0
+        : $this->framePointer + 1,
+    };
   }
 
-  public function rotateRight(): void {
-    $this->shapeSet->next();
-  }
-
-  public function moveLeft(): void {
-    $this->col--;
-  }
-
-  public function moveRight(): void {
-    $this->col++;
-  }
-
-  public function moveDown(): void {
-    $this->row++;
-  }
-
-  public function getTiles(): array {
-    return array_map(function ($pos) {
-      [$row, $col] = $pos;
-      $row += $this->row;
-      $col += $this->col;
-      return new Tile($row, $col, $this->color);
-    }, $this->shapeSet->current()->body);
+  public function intoTiles(): array {
+    $frame = $this->frames[$this->framePointer];
+    return array_map(fn(array $frame) => 
+      new Tile(...$frame, $this->color), 
+    $frame);
   }
 }
