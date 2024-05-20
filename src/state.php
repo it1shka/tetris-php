@@ -26,6 +26,8 @@ final class Init {
 }
 
 final class State {
+  // TODO: add state flag
+
   public function __construct (
     private int $score,
     private Tetromino $currentTetromino,
@@ -58,10 +60,15 @@ final class State {
     ]);
   }
 
+  public function mutate(): State {
+    // TODO: pull action from $_GET["action"]
+    // TODO: and mutate the state
+    return $this;
+  }
+
   public function render(): string {
     $field = $this->renderField();
     $controls = $this->renderControls();
-
     return <<<END
       <main class="game-container">
         <div class="game-info">
@@ -75,10 +82,10 @@ final class State {
   }
 
   private function renderField(): string {
-
+    // TODO: 
   }
 
   private function renderControls(): string {
-
+    // TODO: 
   }
 }
