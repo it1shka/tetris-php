@@ -73,4 +73,13 @@ final class Tetromino {
       new Tile(...$frame, $this->color), 
     $frame);
   }
+
+  // needed for encoding / decoding
+  public function setRotation(int $framePointer): void {
+    $this->framePointer = $framePointer;
+  }
+
+  public function getRotation(): int {
+    return $this->framePointer;
+  }
 }

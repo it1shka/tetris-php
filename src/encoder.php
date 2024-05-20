@@ -3,6 +3,8 @@
 include_once "./tetromino.php";
 include_once "./randomizer.php";
 
+define("SEPARATOR", "-");
+
 final class Encoder {
   public static function encodeBooleanMatrix(array $matrix): string {
     $parts = array_map(function (array $row): int {
@@ -10,7 +12,7 @@ final class Encoder {
       $binaryString = "1" . implode($zeroesAndOnes);
       return bindec($binaryString);
     }, $matrix);
-    return implode("-", $parts);
+    return implode(SEPARATOR, $parts);
   }
 
   public static function decodeBooleanMatrix(string $rawMatrix): array {
@@ -19,14 +21,27 @@ final class Encoder {
       return array_map(function (string $symbol): bool {
         return $symbol === "1";
       }, str_split(substr($binaryString, 1)));
-    }, explode("-", $rawMatrix));
+    }, explode(SEPARATOR, $rawMatrix));
   }
 
   public static function encodeTetromino(Tetromino $tetromino): string {
-    // TODO: also encode it as 1-2-3..
+    return implode(SEPARATOR, [
+      array_search($tetromino->name, array_keys(Storage::$shapes)),
+      ...$tetromino->position,
+      array_search($tetromino->color, Storage::$colors),
+      $tetromino->getRotation(),
+    ]);
   }
 
   public static function decodeTetromino(string $rawTetromino): Tetromino {
-    // TODO: 
+    $parts = explode(SEPARATOR, $rawTetromino);
+    [$nameIndex, $row, $col, $colorIndex, $rotation] = $parts;
+    $name = array_keys(Storage::$shapes)[$nameIndex];
+    $frames = Storage::$shapes[$name];
+    $position = [(int)$row, (int)$col];
+    $color = Storage::$colors[$colorIndex];
+    $tetromino = new Tetromino($name, $frames, $position, $color);
+    $tetromino->setRotation((int) $rotation);
+    return $tetromino;
   }
 }
