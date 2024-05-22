@@ -92,11 +92,18 @@ final class State {
     $this->executeAction();
     $this->mountTetromino();
     $this->cleanCompletedRows();
+    $this->checkFinish();
     return $this;
   }
 
   private function cleanCompletedRows(): void {
+    // TODO:
+  }
 
+  private function checkFinish(): void {
+    if ($this->collisionExists()) {
+      $this->finished = true;
+    }
   }
 
   private function mountTetromino(): void {
@@ -155,6 +162,7 @@ final class State {
       if ($row >= FIELD_HEIGHT || $col < 0 || $col >= FIELD_WIDTH) {
         return true;
       }
+      if ($row < 0) return false;
       return $this->field[$row][$col];
     });
     return count($colliding) > 0;
