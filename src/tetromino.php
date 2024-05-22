@@ -69,9 +69,11 @@ final class Tetromino {
 
   public function intoTiles(): array {
     $frame = $this->frames[$this->framePointer];
-    return array_map(fn(array $frame) => 
-      new Tile(...$frame, $this->color), 
-    $frame);
+    return array_map(function (array $pos) { 
+      $row = $pos[0] + $this->position[0];
+      $col = $pos[1] + $this->position[1];
+      return new Tile($row, $col, $this->color);
+    }, $frame);
   }
 
   // needed for encoding / decoding

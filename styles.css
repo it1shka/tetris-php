@@ -1,0 +1,41 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: sans-serif;
+}
+
+.game-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.game-container > * + * {
+  margin-top: 0.5em;
+}
+
+.game-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.game-field {
+  width: 400px;
+  height: 600px;
+  display: grid;
+  grid-template-rows: repeat(15, 1fr);
+  grid-template-columns: repeat(10, 1fr);
+  gap: 2px;
+}
+
+.game-controls {
+
+}

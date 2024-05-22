@@ -1,7 +1,7 @@
 <?php declare(strict_types = 1);
 
-include_once "./tetromino.php";
-include_once "./randomizer.php";
+include_once "tetromino.php";
+include_once "randomizer.php";
 
 define("SEPARATOR", "-");
 
@@ -25,9 +25,10 @@ final class Encoder {
   }
 
   public static function encodeTetromino(Tetromino $tetromino): string {
+    [$row, $col] = $tetromino->position;
     return implode(SEPARATOR, [
       array_search($tetromino->name, array_keys(Storage::$shapes)),
-      ...$tetromino->position,
+      $row, $col,
       array_search($tetromino->color, Storage::$colors),
       $tetromino->getRotation(),
     ]);
