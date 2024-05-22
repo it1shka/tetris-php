@@ -37,5 +37,20 @@ body {
 }
 
 .game-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 
+.game-controls > a {
+  text-decoration: none;
+  font-size: 0.8em;
+  padding: 2px 5px;
+  color: black;
+  transition: 0.2s all ease-in-out;
+}
+
+.game-controls > a:hover {
+  background-color: grey;
+  color: white;
 }

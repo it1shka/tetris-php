@@ -12,10 +12,10 @@ define("EMPTY_CELL_COLOR", "#eee");
 
 define("ACTIONS", [
   "move_left",
-  "move_right",
-  "move_down",
   "rotate_left",
+  "move_down",
   "rotate_right",
+  "move_right",
 ]);
 
 final class Init {
@@ -34,6 +34,19 @@ final class Init {
     $color = Storage::getRandomColor();
     return new Tetromino($name, $frames, $position, $color);
   }
+
+  public static function createTetrominoByName(string $name): Tetromino {
+    $frames = Storage::getFramesByName($name);
+    $position = [-1, intdiv(FIELD_WIDTH, 2)];
+    $color = Storage::getRandomColor();
+    return new Tetromino($name, $frames, $position, $color);
+  }
+}
+
+function replaceSnakeCase(string $input): string {
+  $parts = explode("_", $input);
+  $capitalized = array_map('ucfirst', $parts);
+  return implode(" ", $capitalized);
 }
 
 final class State {
@@ -76,9 +89,75 @@ final class State {
 
   public function mutate(): State {
     if ($this->finished) return $this;
-    // TODO: pull action from $_GET["action"]
-    // TODO: and mutate the state
+    $this->executeAction();
+    $this->mountTetromino();
+    $this->cleanCompletedRows();
     return $this;
+  }
+
+  private function cleanCompletedRows(): void {
+
+  }
+
+  private function mountTetromino(): void {
+    $this->currentTetromino->move(Direction::Down);
+    $collision = $this->collisionExists();
+    $this->currentTetromino->move(Direction::Up);
+    if (!$collision) return;
+    foreach ($this->currentTetromino->intoTiles() as $tile) {
+      $this->field[$tile->row][$tile->column] = true;
+    }
+    $this->currentTetromino = Init::createTetrominoByName($this->nextTetrominoName);
+    $this->nextTetrominoName = Storage::getRandomTetrominoName();
+  }
+
+  private function executeAction(): void {
+    if (!isset($_GET["action"])) return;
+    $action = $_GET["action"];
+    if (str_starts_with($action, "move")) {
+      $this->executeMotion($action);
+    } else if (str_starts_with($action, "rotate")) {
+      $this->executeRotation($action);
+    }
+  }
+
+  private function executeMotion(string $rawMotion): void {
+    $motion = match ($rawMotion) {
+      "move_right" => Direction::Right,
+      "move_down" => Direction::Down,
+      "move_left" => Direction::Left,
+      default => null
+    };
+    if (is_null($motion)) return;
+    $this->currentTetromino->move($motion);
+    if ($this->collisionExists()) {
+      $this->currentTetromino->move($motion->opposite());
+    }
+  }
+
+  private function executeRotation(string $rawRotation): void {
+    $rotation = match ($rawRotation) {
+      "rotate_left" => Rotation::Left,
+      "rotate_right" => Rotation::Right,
+      default => null
+    };
+    if (is_null($rotation)) return;
+    $this->currentTetromino->rotate($rotation);
+    if ($this->collisionExists()) {
+      $this->currentTetromino->rotate($rotation->opposite());
+    }
+  }
+
+  private function collisionExists(): bool {
+    $tetrominoTiles = $this->currentTetromino->intoTiles();
+    $colliding = array_filter($tetrominoTiles, function (Tile $tetr): bool {
+      [$row, $col] = [$tetr->row, $tetr->column];
+      if ($row >= FIELD_HEIGHT || $col < 0 || $col >= FIELD_WIDTH) {
+        return true;
+      }
+      return $this->field[$row][$col];
+    });
+    return count($colliding) > 0;
   }
 
   public function render(): string {
@@ -125,7 +204,8 @@ final class State {
     foreach (ACTIONS as $action) {
       $queryString = $savedState . "&action=$action";
       $link = $currentURL . "?" . $queryString;
-      $output .= "<a href=\"$link\">$action</a>";
+      $actionTitle = replaceSnakeCase($action);
+      $output .= "<a href=\"$link\">$actionTitle</a>";
     }
     return $output;
   }
@@ -135,7 +215,7 @@ final class State {
     foreach ($this->field as $i => $row) {
       foreach ($row as $j => $col) {
         if (!$col) continue;
-        $tile = new Tile($i, $j, EMPTY_CELL_COLOR);
+        $tile = new Tile($i, $j, BLOCK_CELL_COLOR);
         array_push($tiles, $tile);
       }
     }
