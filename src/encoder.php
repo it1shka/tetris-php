@@ -3,8 +3,9 @@
 include_once "tetromino.php";
 include_once "randomizer.php";
 
-define("SEPARATOR", "-");
+define("SEPARATOR", "~");
 
+// TODO: fix this encoder
 final class Encoder {
   public static function encodeBooleanMatrix(array $matrix): string {
     $parts = array_map(function (array $row): int {
@@ -38,7 +39,7 @@ final class Encoder {
     $parts = explode(SEPARATOR, $rawTetromino);
     [$nameIndex, $row, $col, $colorIndex, $rotation] = $parts;
     $name = array_keys(Storage::$shapes)[$nameIndex];
-    $frames = Storage::$shapes[$name];
+    $frames = Storage::getFramesByName($name);
     $position = [(int)$row, (int)$col];
     $color = Storage::$colors[$colorIndex];
     $tetromino = new Tetromino($name, $frames, $position, $color);

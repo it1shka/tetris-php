@@ -10,6 +10,14 @@ define("FIELD_WIDTH", 10);
 define("BLOCK_CELL_COLOR", "#ccc");
 define("EMPTY_CELL_COLOR", "#eee");
 
+define("ACTIONS", [
+  "move_left",
+  "move_right",
+  "move_down",
+  "rotate_left",
+  "rotate_right",
+]);
+
 final class Init {
   public static function createEmptyField(mixed $value = null): array {
     $field = [];
@@ -39,7 +47,7 @@ final class State {
 
   public static function fromQuery(): State {
     $finished = isset($_GET["finished"])
-      ? $_GET["finished"]
+      ? (bool) $_GET["finished"]
       : false;
     $score = isset($_GET["score"]) 
       ? (int) $_GET["score"] 
@@ -52,7 +60,7 @@ final class State {
       : Storage::getRandomTetrominoName();
     $field = isset($_GET["field"]) 
       ? Encoder::decodeBooleanMatrix($_GET["field"])
-      : Init::createEmptyField();
+      : Init::createEmptyField(false);
     return new State($finished, $score, $currentTetromino, $nextTetrominoName, $field);
   }
 
@@ -106,9 +114,20 @@ final class State {
     return $output;
   }
 
+  // TODO: complete
   private function renderControls(): string {
-    // TODO: 
-    return "";
+    if ($this->finished) {
+      return "Game is finished. Your score is $this->score";
+    }
+    $savedState = $this->toQuery();
+    $currentURL = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
+    $output = "";
+    foreach (ACTIONS as $action) {
+      $queryString = $savedState . "&action=$action";
+      $link = $currentURL . "?" . $queryString;
+      $output .= "<a href=\"$link\">$action</a>";
+    }
+    return $output;
   }
 
   private function fieldIntoTiles(): array {
