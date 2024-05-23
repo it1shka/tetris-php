@@ -5,7 +5,6 @@ include_once "randomizer.php";
 
 define("SEPARATOR", "~");
 
-// TODO: fix this encoder
 final class Encoder {
   public static function encodeBooleanMatrix(array $matrix): string {
     $parts = array_map(function (array $row): int {

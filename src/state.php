@@ -97,7 +97,19 @@ final class State {
   }
 
   private function cleanCompletedRows(): void {
-    // TODO:
+    $fieldTiles = $this->fieldIntoTiles();
+    for ($row = 0; $row < FIELD_HEIGHT; $row++) {
+      $rowTiles = array_filter($fieldTiles, fn (Tile $tile): bool => $tile->row === $row);
+      $rowCount = count($rowTiles);
+      if ($rowCount < FIELD_WIDTH) continue;
+      $this->score += FIELD_WIDTH;
+      $fieldTiles = array_filter($fieldTiles, fn (Tile $tile): bool => $tile->row !== $row);
+      $fieldTiles = array_map(function (Tile $tile) use ($row) {
+        if ($tile->row > $row) return $tile;
+        return new Tile($tile->row + 1, $tile->column, $tile->color);
+      }, $fieldTiles);
+    }
+    $this->buildFieldFromTiles($fieldTiles);
   }
 
   private function checkFinish(): void {
@@ -201,7 +213,6 @@ final class State {
     return $output;
   }
 
-  // TODO: complete
   private function renderControls(): string {
     if ($this->finished) {
       return "Game is finished. Your score is $this->score";
@@ -228,5 +239,13 @@ final class State {
       }
     }
     return $tiles;
+  }
+
+  private function buildFieldFromTiles(array $tiles): void {
+    $field = Init::createEmptyField(false);
+    foreach ($tiles as $tile) {
+      $field[$tile->row][$tile->column] = true;
+    }
+    $this->field = $field;
   }
 }
